@@ -2,8 +2,8 @@ name: Daily Commit
 
 on:
   schedule:
-    - cron: "0 0 * * *"  # Chạy mỗi giờ
-  workflow_dispatch:      # Cho phép chạy thủ công từ giao diện GitHub
+    - cron: "0 0 * * *"   # chạy mỗi ngày lúc 00:00 UTC
+  workflow_dispatch:       # cho phép chạy thủ công nếu muốn test
 
 jobs:
   build:
@@ -13,16 +13,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Make daily commit
+      - name: Create new log file
         run: |
-          # Ghi thời gian hiện tại vào log.txt
-          echo "$(date)" >> log.txt
+          # Đếm số file log hiện có
+          count=$(ls log*.txt 2>/dev/null | wc -l)
+          new_file="log$((count+1)).txt"
 
-          # Cấu hình Git cho action bot
+          # Tạo file mới và ghi thời gian
+          echo "Generated on $(date)" > "$new_file"
+
+          # Cấu hình Git
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Thêm thay đổi, commit và push
-          git add log.txt
-          git commit -m "Auto commit $(date)" || echo "No changes to commit"
+          # Commit và push
+          git add "$new_file"
+          git commit -m "Daily commit: $new_file"
           git push
